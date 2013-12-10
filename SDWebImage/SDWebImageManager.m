@@ -192,29 +192,29 @@
                         {
                             UIImage *transformedImage = [self.delegate imageManager:self transformDownloadedImage:downloadedImage withURL:url];
 
-                            dispatch_main_sync_safe(^
-                            {
-                                completedBlock(transformedImage, nil, SDImageCacheTypeNone, finished);
-                            });
-
                             if (transformedImage && finished)
                             {
                                 NSData *dataToStore = [transformedImage isEqual:downloadedImage] ? data : nil;
                                 [self.imageCache storeImage:transformedImage imageData:dataToStore forKey:key toDisk:cacheOnDisk];
                             }
+                            
+                            dispatch_async(dispatch_get_main_queue(), ^
+                                                    {
+                                                        completedBlock(transformedImage, nil, SDImageCacheTypeNone, finished);
+                                                    });
                         });
                     }
                     else
                     {
-                        dispatch_main_sync_safe(^
-                        {
-                            completedBlock(downloadedImage, nil, SDImageCacheTypeNone, finished);
-                        });
-
                         if (downloadedImage && finished)
                         {
                             [self.imageCache storeImage:downloadedImage imageData:data forKey:key toDisk:cacheOnDisk];
                         }
+                        
+                        dispatch_async(dispatch_get_main_queue(),^
+                                       {
+                                           completedBlock(downloadedImage, nil, SDImageCacheTypeNone, finished);
+                                       });
                     }
                 }
 
@@ -230,7 +230,7 @@
         }
         else if (image)
         {
-            dispatch_main_sync_safe(^
+            dispatch_async(dispatch_get_main_queue(), ^
             {
                 completedBlock(image, nil, cacheType, YES);
             });
@@ -242,7 +242,7 @@
         else
         {
             // Image not in cache and download disallowed by delegate
-            dispatch_main_sync_safe(^
+            dispatch_async(dispatch_get_main_queue(),^
             {
                 completedBlock(nil, nil, SDImageCacheTypeNone, YES);
             });
